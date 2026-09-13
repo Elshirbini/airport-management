@@ -22,7 +22,6 @@ type Notification {
 enum NotificationType {
   BOOKING_CONFIRMATION
   FLIGHT_DELAY
-  EMAIL_VERIFICATION
   WELCOME
   OTP_CONFIRMATION
   RESET_PASSWORD
@@ -56,8 +55,49 @@ type NotificationResponse {
   meta: NotificationMeta!
 }
 
+type Airport {
+  id: ID!
+  name: String!
+  code: String!
+  city: String!
+  country: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type AirportMeta {
+  totalCount: Float!
+}
+
+type AirportResponse {
+  airports: [Airport!]!
+  meta: AirportMeta!
+}
+
+type UserProfile {
+  id: ID!
+  email: String!
+  role: UserRole!
+  emailVerified: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""User role in the system"""
+enum UserRole {
+  SUPER_ADMIN
+  AIRPORT_ADMIN
+  STAFF
+  PASSENGER
+}
+
 type Query {
   getNotifications(input: QueryInput!): NotificationResponse!
+  airports(input: AirportQueryInput = {}): AirportResponse!
+  airport(id: ID!): Airport!
+
+  """Return the currently authenticated user profile."""
+  me: UserProfile!
 }
 
 input QueryInput {
@@ -65,8 +105,51 @@ input QueryInput {
   is_read: Boolean!
 }
 
+input AirportQueryInput {
+  limit: Float!
+}
+
 type Mutation {
   markAsRead(id: String!): Notification!
+  createAirport(input: CreateAirportInput!): Airport!
+  updateAirport(id: ID!, input: UpdateAirportInput!): Airport!
+  deleteAirport(id: ID!): Boolean!
+
+  """Register a new passenger account. Does not issue tokens."""
+  register(input: RegisterInput!): UserProfile!
+
+  """Authenticate with email and password."""
+  login(input: LoginInput!): UserProfile!
+
+  """Rotate the refresh token stored in the httpOnly cookie."""
+  refreshToken: UserProfile!
+
+  """Verify email address using the OTP sent during registration."""
+  verifyEmail(email: String!, otp: String!): Boolean!
+}
+
+input CreateAirportInput {
+  name: String!
+  code: String!
+  city: String!
+  country: String!
+}
+
+input UpdateAirportInput {
+  name: String
+  code: String
+  city: String
+  country: String
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
 }
 
 type Subscription {

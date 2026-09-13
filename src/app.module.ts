@@ -24,6 +24,9 @@ import { JwtModule, JwtService } from '@nestjs/jwt';
 import { ComplexityPlugin } from './common/plugins/complexity.plugin';
 import { databaseConfig } from './database/database.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AirportModule } from './airports/airport.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -156,6 +159,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     AutomapperModule.forRoot({ strategyInitializer: classes() }),
     RedisModule,
     NotificationModule,
+    AirportModule,
+    UsersModule,
     JwtModule.register({ global: true }),
     BullModule.forRootAsync({
       inject: [ConfigService],
@@ -177,6 +182,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         },
       }),
     }),
+    AuthModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: GqlThrottlerGuard },
