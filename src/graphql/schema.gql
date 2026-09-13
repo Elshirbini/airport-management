@@ -1,0 +1,74 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Notification {
+  id: ID!
+  userId: ID!
+  bookingId: ID
+  flightId: ID
+  type: NotificationType!
+  channel: NotificationChannel!
+  status: NotificationStatus!
+  subject: String
+  message: String!
+  isRead: Boolean!
+  readAt: DateTime
+  sentAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum NotificationType {
+  BOOKING_CONFIRMATION
+  FLIGHT_DELAY
+  EMAIL_VERIFICATION
+  WELCOME
+  OTP_CONFIRMATION
+  RESET_PASSWORD
+}
+
+enum NotificationChannel {
+  DATABASE
+  SOCKET
+  EMAIL
+  SMS
+  GRAPHQL_PUBSUB
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type NotificationMeta {
+  totalCount: Float!
+}
+
+type NotificationResponse {
+  notifications: [Notification!]!
+  meta: NotificationMeta!
+}
+
+type Query {
+  getNotifications(input: QueryInput!): NotificationResponse!
+}
+
+input QueryInput {
+  limit: Float!
+  is_read: Boolean!
+}
+
+type Mutation {
+  markAsRead(id: String!): Notification!
+}
+
+type Subscription {
+  notificationCreated: Notification!
+}
