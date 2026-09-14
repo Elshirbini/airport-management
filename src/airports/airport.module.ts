@@ -15,6 +15,6 @@ import { AirportMapper } from './airport.mapper';
     AirportRepository,
     AirportMapper,
   ],
-  exports: [AirportService],
+  exports: [AirportService, AirportRepository],
 })
 export class AirportModule {}

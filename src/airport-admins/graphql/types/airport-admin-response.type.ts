@@ -1,17 +1,13 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { AirportAdmin } from './airport-admin.type';
 
-@ObjectType()
-class AirportAdminMeta {
-  @Field()
-  totalCount!: number;
-}
+import { PaginationMeta } from '../../../common/graphql/types/pagination-meta.type';
+import { AirportAdmin } from './airport-admin.type';
 
 @ObjectType()
 export class AirportAdminResponse {
   @Field(() => [AirportAdmin])
   airportAdmins!: AirportAdmin[];
 
-  @Field(() => AirportAdminMeta)
-  meta!: AirportAdminMeta;
+  @Field(() => PaginationMeta)
+  meta!: PaginationMeta;
 }

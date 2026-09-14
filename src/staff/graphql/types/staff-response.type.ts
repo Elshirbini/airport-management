@@ -1,17 +1,13 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Staff } from './staff.type';
 
-@ObjectType()
-class StaffMeta {
-  @Field()
-  totalCount!: number;
-}
+import { PaginationMeta } from '../../../common/graphql/types/pagination-meta.type';
+import { Staff } from './staff.type';
 
 @ObjectType()
 export class StaffResponse {
   @Field(() => [Staff])
   staffs!: Staff[];
 
-  @Field(() => StaffMeta)
-  meta!: StaffMeta;
+  @Field(() => PaginationMeta)
+  meta!: PaginationMeta;
 }

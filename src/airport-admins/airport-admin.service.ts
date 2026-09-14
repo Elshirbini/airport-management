@@ -153,7 +153,7 @@ export class AirportAdminService {
       );
     }
 
-    const { airportAdmins, totalCount } =
+    const { airportAdmins, page, totalCount } =
       await this.airportAdminRepository.findMany(query, airportIdFilter);
 
     const mapped = await this.mapper.mapArrayAsync(
@@ -162,7 +162,7 @@ export class AirportAdminService {
       GraphQLAirportAdmin,
     );
 
-    return { airportAdmins: mapped, meta: { totalCount } };
+    return { airportAdmins: mapped, meta: { page, totalCount } };
   }
 
   async deleteAirportAdmin(

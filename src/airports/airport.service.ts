@@ -22,7 +22,7 @@ export class AirportService {
   ) {}
 
   async getAirports(query: AirportQueryInput): Promise<AirportResponse> {
-    const { airports, totalCount } =
+    const { airports, page, totalCount } =
       await this.airportRepository.getAirports(query);
 
     const mappedAirports = await this.mapper.mapArrayAsync(
@@ -34,6 +34,7 @@ export class AirportService {
     return {
       airports: mappedAirports,
       meta: {
+        page,
         totalCount,
       },
     };

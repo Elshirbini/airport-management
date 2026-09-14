@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { resolvePagination } from '../common/utils/pagination.util';
 import { Airport } from './entities/airport.entity';
 import { AirportQueryInput } from './graphql/inputs/airport-query.input';
 
@@ -19,17 +20,22 @@ export class AirportRepository {
 
   async getAirports(query: AirportQueryInput): Promise<{
     airports: Airport[];
+    page: number;
     totalCount: number;
   }> {
+    const { page, limit, skip } = resolvePagination(query.page, query.limit);
+
     const [airports, totalCount] = await this.airportRepository.findAndCount({
       order: {
         createdAt: 'DESC',
       },
-      take: query.limit ?? 10,
+      skip,
+      take: limit,
     });
 
     return {
       airports,
+      page,
       totalCount,
     };
   }

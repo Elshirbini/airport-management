@@ -1,14 +1,11 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { IsBoolean, IsInt, IsOptional } from 'class-validator';
+import { IsBoolean, IsOptional } from 'class-validator';
+
+import { PaginationInput } from '../../../common/graphql/inputs/pagination.input';
 
 @InputType()
-export class QueryInput {
-  @Field()
-  @IsOptional()
-  @IsInt()
-  limit?: number;
-
-  @Field()
+export class QueryInput extends PaginationInput {
+  @Field({ nullable: true })
   @IsOptional()
   @IsBoolean()
   is_read?: boolean;

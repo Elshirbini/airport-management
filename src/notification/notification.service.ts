@@ -47,7 +47,7 @@ export class NotificationService {
 
   async getNotifications(ctx: GraphQLContext, query: QueryInput) {
     const userId = ctx.request.userId!;
-    const { notifications, totalCount } =
+    const { notifications, page, totalCount } =
       await this.notificationRepo.getNotificationsByUserId(userId, query);
 
     const mappedNotifications = this.mapper.mapArray(
@@ -56,7 +56,7 @@ export class NotificationService {
       GraphQLNotification,
     );
 
-    return { notifications: mappedNotifications, meta: { totalCount } };
+    return { notifications: mappedNotifications, meta: { page, totalCount } };
   }
 
   async markAsRead(ctx: GraphQLContext, notificationId: string) {

@@ -6,7 +6,6 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { FastifyReply } from 'fastify';
 import { Mapper } from '@automapper/core';

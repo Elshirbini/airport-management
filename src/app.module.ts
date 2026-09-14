@@ -29,6 +29,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { StaffModule } from './staff/staff.module';
 import { AirportAdminsModule } from './airport-admins/airport-admins.module';
+import { FlightsModule } from './flights/flights.module';
 
 @Module({
   imports: [
@@ -187,6 +188,7 @@ import { AirportAdminsModule } from './airport-admins/airport-admins.module';
     AuthModule,
     StaffModule,
     AirportAdminsModule,
+    FlightsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: GqlThrottlerGuard },

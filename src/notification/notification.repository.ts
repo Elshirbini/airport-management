@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
+import { resolvePagination } from '../common/utils/pagination.util';
 import { Notification } from './entities/notification.entity';
 import { QueryInput } from './graphql/inputs/query.input';
 
@@ -25,8 +26,11 @@ export class NotificationRepository {
     query: QueryInput,
   ): Promise<{
     notifications: Notification[];
+    page: number;
     totalCount: number;
   }> {
+    const { page, limit, skip } = resolvePagination(query.page, query.limit);
+
     const [notifications, totalCount] =
       await this.notificationRepository.findAndCount({
         where: {
@@ -38,11 +42,13 @@ export class NotificationRepository {
         order: {
           createdAt: 'DESC',
         },
-        take: query.limit ?? 10,
+        skip,
+        take: limit,
       });
 
     return {
       notifications,
+      page,
       totalCount,
     };
   }

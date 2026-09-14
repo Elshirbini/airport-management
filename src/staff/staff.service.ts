@@ -14,6 +14,7 @@ import { Mapper } from '@automapper/core';
 import { StaffRepository } from './staff.repository';
 import { UsersRepository } from '../users/users.repository';
 import { AirportAdminRepository } from '../airport-admins/airport-admin.repository';
+import { FlightService } from '../flights/flight.service';
 import { Staff as DBStaff } from './entities/staff.entity';
 import { Staff as GraphQLStaff } from './graphql/types/staff.type';
 import { StaffResponse } from './graphql/types/staff-response.type';
@@ -28,6 +29,7 @@ export class StaffService {
     private readonly staffRepository: StaffRepository,
     private readonly usersRepository: UsersRepository,
     private readonly airportAdminRepository: AirportAdminRepository,
+    private readonly flightService: FlightService,
     private readonly dataSource: DataSource,
     @InjectMapper() private readonly mapper: Mapper,
   ) {}
@@ -220,7 +222,7 @@ export class StaffService {
       );
     }
 
-    const { staffs, totalCount } = await this.staffRepository.getStaffs(
+    const { staffs, page, totalCount } = await this.staffRepository.getStaffs(
       query,
       airportIdFilter,
     );
@@ -233,7 +235,7 @@ export class StaffService {
 
     return {
       staffs: mappedStaffs,
-      meta: { totalCount },
+      meta: { page, totalCount },
     };
   }
 
@@ -259,14 +261,17 @@ export class StaffService {
       throw new ForbiddenException();
     }
 
-    // TODO: Mocked Flight validation until Flight module exists
-    // Normally we would call flightService.findFlightById(flightId) and validate airport scopes.
-    if (
-      !flightId.match(
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
-      )
-    ) {
-      throw new Error('flightId must be a valid UUID');
+    const flight = await this.flightService.findFlightById(flightId);
+    if (!flight) throw new NotFoundException('Flight not found');
+
+    const flightInvolvesStaffAirport =
+      flight.departureAirportId === staff.airportId ||
+      flight.destinationAirportId === staff.airportId;
+
+    if (!flightInvolvesStaffAirport) {
+      throw new ForbiddenException(
+        'Staff can only be assigned to flights involving their own airport.',
+      );
     }
 
     staff.assignedFlightId = flightId;

@@ -46,13 +46,14 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type NotificationMeta {
-  totalCount: Float!
+type PaginationMeta {
+  page: Int!
+  totalCount: Int!
 }
 
 type NotificationResponse {
   notifications: [Notification!]!
-  meta: NotificationMeta!
+  meta: PaginationMeta!
 }
 
 type Airport {
@@ -65,13 +66,9 @@ type Airport {
   updatedAt: DateTime!
 }
 
-type AirportMeta {
-  totalCount: Float!
-}
-
 type AirportResponse {
   airports: [Airport!]!
-  meta: AirportMeta!
+  meta: PaginationMeta!
 }
 
 type UserProfile {
@@ -91,6 +88,27 @@ enum UserRole {
   PASSENGER
 }
 
+type Flight {
+  id: ID!
+  flightNumber: String!
+  departureAirportId: ID!
+  destinationAirportId: ID!
+  departureTime: DateTime!
+  arrivalTime: DateTime!
+  airline: String!
+  availableSeats: Int!
+  status: FlightStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+"""Current status of a flight"""
+enum FlightStatus {
+  ON_TIME
+  DELAYED
+  CANCELED
+}
+
 type Staff {
   id: ID!
   userId: ID!
@@ -108,13 +126,9 @@ enum StaffRole {
   SECURITY
 }
 
-type StaffMeta {
-  totalCount: Float!
-}
-
 type StaffResponse {
   staffs: [Staff!]!
-  meta: StaffMeta!
+  meta: PaginationMeta!
 }
 
 type AirportAdmin {
@@ -125,13 +139,14 @@ type AirportAdmin {
   updatedAt: DateTime!
 }
 
-type AirportAdminMeta {
-  totalCount: Float!
-}
-
 type AirportAdminResponse {
   airportAdmins: [AirportAdmin!]!
-  meta: AirportAdminMeta!
+  meta: PaginationMeta!
+}
+
+type FlightResponse {
+  flights: [Flight!]!
+  meta: PaginationMeta!
 }
 
 type Query {
@@ -145,23 +160,38 @@ type Query {
   staff(id: ID!): Staff!
   airportAdmins(input: AirportAdminQueryInput = {}): AirportAdminResponse!
   airportAdmin(id: ID!): AirportAdmin!
+  flight(id: ID!): Flight!
+  flights(query: FlightQueryInput = {}): FlightResponse!
 }
 
 input QueryInput {
-  limit: Float!
-  is_read: Boolean!
+  page: Int
+  limit: Int
+  is_read: Boolean
 }
 
 input AirportQueryInput {
-  limit: Float!
+  page: Int
+  limit: Int
 }
 
 input StaffQueryInput {
-  limit: Float
+  page: Int
+  limit: Int
 }
 
 input AirportAdminQueryInput {
-  limit: Float
+  page: Int
+  limit: Int
+}
+
+input FlightQueryInput {
+  page: Int
+  limit: Int
+  departureTimeFrom: DateTime
+  departureTimeTo: DateTime
+  destinationAirportId: ID
+  airline: String
 }
 
 type Mutation {
@@ -187,6 +217,9 @@ type Mutation {
   assignStaffToFlight(staffId: ID!, flightId: ID!): Staff!
   createAirportAdmin(input: CreateAirportAdminInput!): AirportAdmin!
   deleteAirportAdmin(id: ID!): Boolean!
+  createFlight(input: CreateFlightInput!): Flight!
+  updateFlight(id: ID!, input: UpdateFlightInput!): Flight!
+  deleteFlight(id: ID!): Boolean!
 }
 
 input CreateAirportInput {
@@ -230,6 +263,29 @@ input CreateAirportAdminInput {
   airportId: ID
 }
 
+input CreateFlightInput {
+  flightNumber: String!
+  departureAirportId: ID!
+  destinationAirportId: ID!
+  departureTime: DateTime!
+  arrivalTime: DateTime!
+  airline: String!
+  availableSeats: Int!
+  status: FlightStatus
+}
+
+input UpdateFlightInput {
+  flightNumber: String
+  departureAirportId: ID
+  destinationAirportId: ID
+  departureTime: DateTime
+  arrivalTime: DateTime
+  airline: String
+  availableSeats: Int
+  status: FlightStatus
+}
+
 type Subscription {
   notificationCreated: Notification!
+  FLIGHT_STATUS_UPDATED(flightId: ID!): Flight!
 }
