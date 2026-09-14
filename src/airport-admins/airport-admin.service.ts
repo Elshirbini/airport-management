@@ -29,10 +29,6 @@ export class AirportAdminService {
     @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
-  /**
-   * Resolves the airport that the authenticated AIRPORT_ADMIN belongs to.
-   * Queries AirportAdminRepository — NOT StaffRepository.
-   */
   async getAdminAirportId(userId: string): Promise<string> {
     const adminRecord = await this.airportAdminRepository.findByUserId(userId);
     if (!adminRecord) {
@@ -71,45 +67,33 @@ export class AirportAdminService {
       throw new ConflictException('An account with this email already exists');
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const savedAdmin = await this.dataSource.manager.transaction(
+      async (manager) => {
+        const passwordHash = await bcrypt.hash(input.password, 12);
 
-    try {
-      const passwordHash = await bcrypt.hash(input.password, 12);
+        const user = manager.create(User, {
+          email: input.email.toLowerCase(),
+          password: passwordHash,
+          role: UserRole.AIRPORT_ADMIN,
+          emailVerified: true,
+        });
 
-      const user = queryRunner.manager.create(User, {
-        email: input.email.toLowerCase(),
-        password: passwordHash,
-        role: UserRole.AIRPORT_ADMIN,
-        emailVerified: true,
-      });
+        const savedUser = await manager.save(User, user);
 
-      const savedUser = await queryRunner.manager.save(User, user);
+        const adminRecord = manager.create(DBAirportAdmin, {
+          userId: savedUser.id,
+          airportId: resolvedAirportId,
+        });
 
-      const adminRecord = queryRunner.manager.create(DBAirportAdmin, {
-        userId: savedUser.id,
-        airportId: resolvedAirportId,
-      });
+        return manager.save(DBAirportAdmin, adminRecord);
+      },
+    );
 
-      const savedAdmin = await queryRunner.manager.save(
-        DBAirportAdmin,
-        adminRecord,
-      );
-
-      await queryRunner.commitTransaction();
-
-      return this.mapper.mapAsync(
-        savedAdmin,
-        DBAirportAdmin,
-        GraphQLAirportAdmin,
-      );
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    return this.mapper.mapAsync(
+      savedAdmin,
+      DBAirportAdmin,
+      GraphQLAirportAdmin,
+    );
   }
 
   async getAirportAdmin(
@@ -186,20 +170,11 @@ export class AirportAdminService {
       throw new ForbiddenException();
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    await this.dataSource.manager.transaction(async (manager) => {
+      await manager.delete(DBAirportAdmin, { id });
+      await manager.delete(User, { id: target.userId });
+    });
 
-    try {
-      await queryRunner.manager.delete(DBAirportAdmin, { id });
-      await queryRunner.manager.delete(User, { id: target.userId });
-      await queryRunner.commitTransaction();
-      return true;
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    return true;
   }
 }

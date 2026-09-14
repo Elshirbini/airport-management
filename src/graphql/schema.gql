@@ -80,7 +80,6 @@ type UserProfile {
   updatedAt: DateTime!
 }
 
-"""User role in the system"""
 enum UserRole {
   SUPER_ADMIN
   AIRPORT_ADMIN
@@ -117,7 +116,6 @@ type Flight {
   updatedAt: DateTime!
 }
 
-"""Current status of a flight"""
 enum FlightStatus {
   ON_TIME
   DELAYED
@@ -164,12 +162,32 @@ type FlightResponse {
   meta: PaginationMeta!
 }
 
+type Booking {
+  id: ID!
+  passengerId: ID!
+  flightId: ID!
+  seatNumber: Int!
+  status: BookingStatus!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  flight: Flight
+}
+
+"""Status of a booking"""
+enum BookingStatus {
+  CONFIRMED
+  CANCELED
+}
+
+type BookingResponse {
+  bookings: [Booking!]!
+  meta: PaginationMeta!
+}
+
 type Query {
   getNotifications(input: QueryInput!): NotificationResponse!
   airports(input: AirportQueryInput = {}): AirportResponse!
   airport(id: ID!): Airport!
-
-  """Return the currently authenticated user profile."""
   profile: UserProfile!
   passengers(query: PassengerQueryInput = {}): PassengerResponse!
   passenger(id: ID!): Passenger!
@@ -179,6 +197,8 @@ type Query {
   airportAdmin(id: ID!): AirportAdmin!
   flight(id: ID!): Flight!
   flights(query: FlightQueryInput = {}): FlightResponse!
+  bookings(query: BookingQueryInput = {}): BookingResponse!
+  booking(id: ID!): Booking!
 }
 
 input QueryInput {
@@ -216,22 +236,19 @@ input FlightQueryInput {
   airline: String
 }
 
+input BookingQueryInput {
+  page: Int
+  limit: Int
+}
+
 type Mutation {
   markAsRead(id: String!): Notification!
   createAirport(input: CreateAirportInput!): Airport!
   updateAirport(id: ID!, input: UpdateAirportInput!): Airport!
   deleteAirport(id: ID!): Boolean!
-
-  """Register a new passenger account. Does not issue tokens."""
   register(input: RegisterInput!): UserProfile!
-
-  """Authenticate with email and password."""
   login(input: LoginInput!): UserProfile!
-
-  """Rotate the refresh token stored in the httpOnly cookie."""
   refreshToken: UserProfile!
-
-  """Verify email address using the OTP sent during registration."""
   verifyEmail(email: String!, otp: String!): Boolean!
   updatePassenger(id: ID!, input: UpdatePassengerInput!): Passenger!
   updateMyPassengerProfile(input: UpdateMyPassengerProfileInput!): Passenger!
@@ -245,6 +262,8 @@ type Mutation {
   createFlight(input: CreateFlightInput!): Flight!
   updateFlight(id: ID!, input: UpdateFlightInput!): Flight!
   deleteFlight(id: ID!): Boolean!
+  createBooking(input: CreateBookingInput!): Booking!
+  cancelBooking(id: ID!): Booking!
 }
 
 input CreateAirportInput {
@@ -323,6 +342,11 @@ input UpdateFlightInput {
   airline: String
   availableSeats: Int
   status: FlightStatus
+}
+
+input CreateBookingInput {
+  flightId: ID!
+  seatNumber: Int!
 }
 
 type Subscription {

@@ -26,6 +26,17 @@ export class MailProcessor extends WorkerHost {
         case EmailJobs.WELCOME:
           await this.emailService.sendWelcomeEmail(job.data.to);
           break;
+        case EmailJobs.BOOKING_CONFIRMATION:
+          await this.emailService.sendBookingConfirmationEmail(job.data.to, {
+            passengerName: job.data.passengerName,
+            bookingId: job.data.bookingId,
+            flightNumber: job.data.flightNumber,
+            airline: job.data.airline,
+            seatNumber: job.data.seatNumber,
+            departureTime: new Date(job.data.departureTime),
+            arrivalTime: new Date(job.data.arrivalTime),
+          });
+          break;
       }
     } catch (error: any) {
       this.logger.error(

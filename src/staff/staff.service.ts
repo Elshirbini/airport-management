@@ -34,10 +34,6 @@ export class StaffService {
     @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
-  /**
-   * Resolves the airport that the authenticated AIRPORT_ADMIN belongs to.
-   * Uses AirportAdminRepository — NOT StaffRepository.
-   */
   private async getAdminAirportId(userId: string): Promise<string> {
     const adminRecord = await this.airportAdminRepository.findByUserId(userId);
     if (!adminRecord) {
@@ -73,39 +69,30 @@ export class StaffService {
       throw new ConflictException('An account with this email already exists');
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const savedStaff = await this.dataSource.manager.transaction(
+      async (manager) => {
+        const passwordHash = await bcrypt.hash(input.password, 12);
 
-    try {
-      const passwordHash = await bcrypt.hash(input.password, 12);
+        const user = manager.create(User, {
+          email: input.email.toLowerCase(),
+          password: passwordHash,
+          role: UserRole.STAFF,
+          emailVerified: true,
+        });
 
-      const user = queryRunner.manager.create(User, {
-        email: input.email.toLowerCase(),
-        password: passwordHash,
-        role: UserRole.STAFF,
-        emailVerified: true,
-      });
+        const savedUser = await manager.save(User, user);
 
-      const savedUser = await queryRunner.manager.save(User, user);
+        const staff = manager.create(DBStaff, {
+          userId: savedUser.id,
+          airportId: resolvedAirportId,
+          role: input.role,
+        });
 
-      const staff = queryRunner.manager.create(DBStaff, {
-        userId: savedUser.id,
-        airportId: resolvedAirportId,
-        role: input.role,
-      });
+        return manager.save(DBStaff, staff);
+      },
+    );
 
-      const savedStaff = await queryRunner.manager.save(DBStaff, staff);
-
-      await queryRunner.commitTransaction();
-
-      return this.mapper.mapAsync(savedStaff, DBStaff, GraphQLStaff);
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    return this.mapper.mapAsync(savedStaff, DBStaff, GraphQLStaff);
   }
 
   async updateStaff(
@@ -156,21 +143,12 @@ export class StaffService {
       throw new ForbiddenException();
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    await this.dataSource.manager.transaction(async (manager) => {
+      await manager.delete(DBStaff, { id: staffId });
+      await manager.delete(User, { id: staff.userId });
+    });
 
-    try {
-      await queryRunner.manager.delete(DBStaff, { id: staffId });
-      await queryRunner.manager.delete(User, { id: staff.userId });
-      await queryRunner.commitTransaction();
-      return true;
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    return true;
   }
 
   async getStaff(

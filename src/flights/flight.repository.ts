@@ -34,13 +34,11 @@ export class FlightRepository {
 
   async findMany(
     query: FlightQueryInput,
-    /** When set, only flights where this airport is departure OR destination are returned */
     scopedAirportId?: string,
   ): Promise<{ flights: Flight[]; page: number; totalCount: number }> {
     const { page, limit, skip } = resolvePagination(query.page, query.limit);
     const qb = this.repository.createQueryBuilder('flight');
 
-    // Airport Admin mandatory scope — applies to departure OR destination
     if (scopedAirportId) {
       qb.andWhere(
         '(flight.departure_airport_id = :aid OR flight.destination_airport_id = :aid)',

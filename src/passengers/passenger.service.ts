@@ -144,21 +144,12 @@ export class PassengerService {
       throw new ForbiddenException();
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    await this.dataSource.manager.transaction(async (manager) => {
+      await manager.delete(DBPassenger, { id: passengerId });
+      await manager.delete(User, { id: passenger.userId });
+    });
 
-    try {
-      await queryRunner.manager.delete(DBPassenger, { id: passengerId });
-      await queryRunner.manager.delete(User, { id: passenger.userId });
-      await queryRunner.commitTransaction();
-      return true;
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+    return true;
   }
 
   private async applyPassengerUpdates(

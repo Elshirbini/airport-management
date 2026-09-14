@@ -106,39 +106,27 @@ export class AuthService {
 
     const passwordHash = await bcrypt.hash(input.password, 12);
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    let user: User;
-
-    try {
-      const newUser = queryRunner.manager.create(User, {
+    const user = await this.dataSource.manager.transaction(async (manager) => {
+      const newUser = manager.create(User, {
         email: input.email.toLowerCase(),
         password: passwordHash,
         role: UserRole.PASSENGER,
         emailVerified: false,
       });
 
-      const savedUser = await queryRunner.manager.save(User, newUser);
+      const savedUser = await manager.save(User, newUser);
 
-      const passenger = queryRunner.manager.create(DBPassenger, {
+      const passenger = manager.create(DBPassenger, {
         userId: savedUser.id,
         name: input.name,
         passportNumber: input.passportNumber,
         nationality: input.nationality,
       });
 
-      await queryRunner.manager.save(DBPassenger, passenger);
+      await manager.save(DBPassenger, passenger);
 
-      await queryRunner.commitTransaction();
-      user = savedUser;
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      throw err;
-    } finally {
-      await queryRunner.release();
-    }
+      return savedUser;
+    });
 
     const otp = generateOtp(6);
 

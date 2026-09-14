@@ -4,7 +4,6 @@ import { FlightStatus } from '../../entities/flight.entity';
 
 registerEnumType(FlightStatus, {
   name: 'FlightStatus',
-  description: 'Current status of a flight',
 });
 
 @ObjectType()

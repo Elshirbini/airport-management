@@ -8,11 +8,6 @@ export class MailQueueService {
 
   constructor(@InjectQueue('emails') private readonly emailQueue: Queue) {}
 
-  /**
-   * Add an email job to the global email queue.
-   * @param jobName The name of the email template/job to execute.
-   * @param data The data required for the email template.
-   */
   async addDataToQueue(jobName: string, data: any, delayMs?: number) {
     try {
       await this.emailQueue.add(jobName, data, {

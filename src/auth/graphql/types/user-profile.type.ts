@@ -4,13 +4,8 @@ import { UserRole } from 'src/users/entities/user.entity';
 
 registerEnumType(UserRole, {
   name: 'UserRole',
-  description: 'User role in the system',
 });
 
-/**
- * Public GraphQL representation of an authenticated user.
- * password is intentionally excluded.
- */
 @ObjectType()
 export class UserProfile {
   @AutoMap()

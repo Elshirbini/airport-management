@@ -23,10 +23,6 @@ export class CreateAirportAdminInput {
   @MaxLength(16, { message: 'Password must not exceed 16 characters' })
   password!: string;
 
-  /**
-   * Required when caller is SUPER_ADMIN.
-   * Ignored / not trusted when caller is AIRPORT_ADMIN (airport resolved server-side).
-   */
   @Field(() => ID, { nullable: true })
   @IsUUID()
   @IsOptional()

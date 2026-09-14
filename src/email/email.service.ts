@@ -4,6 +4,10 @@ import { EmailTemplate } from './templates/email-template.interface';
 import { OtpConfirmationTemplate } from './templates/otp-confirmation.template';
 import { ResetPasswordTemplate } from './templates/reset-password.template';
 import { WelcomeTemplate } from './templates/welcome.template';
+import {
+  BookingConfirmationDetails,
+  BookingConfirmationTemplate,
+} from './templates/booking-confirmation.template';
 
 @Injectable()
 export class EmailService {
@@ -45,6 +49,14 @@ export class EmailService {
 
   async sendWelcomeEmail(to: string) {
     const template = new WelcomeTemplate(to);
+    await this.sendTemplate(template);
+  }
+
+  async sendBookingConfirmationEmail(
+    to: string,
+    details: BookingConfirmationDetails,
+  ) {
+    const template = new BookingConfirmationTemplate(to, details);
     await this.sendTemplate(template);
   }
 }

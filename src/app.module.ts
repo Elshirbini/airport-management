@@ -31,6 +31,7 @@ import { StaffModule } from './staff/staff.module';
 import { AirportAdminsModule } from './airport-admins/airport-admins.module';
 import { FlightsModule } from './flights/flights.module';
 import { PassengersModule } from './passengers/passengers.module';
+import { BookingsModule } from './bookings/bookings.module';
 
 @Module({
   imports: [
@@ -191,6 +192,7 @@ import { PassengersModule } from './passengers/passengers.module';
     AirportAdminsModule,
     FlightsModule,
     PassengersModule,
+    BookingsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: GqlThrottlerGuard },

@@ -14,16 +14,12 @@ import { GraphQLContext } from 'src/graphql/graphql-context';
 export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
-  @Mutation(() => UserProfile, {
-    description: 'Register a new passenger account. Does not issue tokens.',
-  })
+  @Mutation(() => UserProfile)
   register(@Args('input') input: RegisterInput): Promise<UserProfile> {
     return this.authService.register(input);
   }
 
-  @Mutation(() => UserProfile, {
-    description: 'Authenticate with email and password.',
-  })
+  @Mutation(() => UserProfile)
   login(
     @Args('input') input: LoginInput,
     @Context() ctx: GraphQLContext,
@@ -31,9 +27,7 @@ export class AuthResolver {
     return this.authService.login(input, ctx.reply);
   }
 
-  @Mutation(() => UserProfile, {
-    description: 'Rotate the refresh token stored in the httpOnly cookie.',
-  })
+  @Mutation(() => UserProfile)
   refreshToken(@Context() ctx: GraphQLContext): Promise<UserProfile> {
     const token = ctx.request.cookies?.refreshToken;
     if (!token) {
@@ -42,9 +36,7 @@ export class AuthResolver {
     return this.authService.refreshToken(token, ctx.reply);
   }
 
-  @Mutation(() => Boolean, {
-    description: 'Verify email address using the OTP sent during registration.',
-  })
+  @Mutation(() => Boolean)
   verifyEmail(
     @Args('email') email: string,
     @Args('otp') otp: string,
@@ -53,9 +45,7 @@ export class AuthResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(() => UserProfile, {
-    description: 'Return the currently authenticated user profile.',
-  })
+  @Query(() => UserProfile)
   profile(@CurrentUser() userId: string): Promise<UserProfile> {
     return this.authService.profile(userId);
   }

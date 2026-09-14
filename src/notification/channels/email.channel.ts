@@ -29,6 +29,19 @@ export class EmailChannel {
             to: dto.data?.to,
           };
           break;
+        case NotificationType.BOOKING_CONFIRMATION:
+          jobName = EmailJobs.BOOKING_CONFIRMATION;
+          emailData = {
+            to: dto.data?.to,
+            passengerName: dto.data?.passengerName,
+            bookingId: dto.data?.bookingId,
+            flightNumber: dto.data?.flightNumber,
+            airline: dto.data?.airline,
+            seatNumber: dto.data?.seatNumber,
+            departureTime: dto.data?.departureTime,
+            arrivalTime: dto.data?.arrivalTime,
+          };
+          break;
 
         default:
           this.logger.warn(
