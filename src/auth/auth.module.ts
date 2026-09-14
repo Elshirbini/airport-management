@@ -9,12 +9,14 @@ import { TokenService } from './token.service';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { RefreshTokenRepository } from './refresh-token.repository';
 import { UsersModule } from 'src/users/users.module';
+import { PassengersModule } from 'src/passengers/passengers.module';
 import { NotificationModule } from 'src/notification/notification.module';
 import { RedisModule } from 'src/redis/redis.module';
 
 @Module({
   imports: [
     UsersModule,
+    PassengersModule,
     TypeOrmModule.forFeature([RefreshToken]),
     NotificationModule,
     RedisModule,

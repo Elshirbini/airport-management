@@ -19,14 +19,14 @@ export class EmailChannel {
         case NotificationType.OTP_CONFIRMATION:
           jobName = EmailJobs.OTP_CONFIRMATION;
           emailData = {
-            to: dto.data?.email,
+            to: dto.data?.to,
             otp: dto.data?.otp,
           };
           break;
         case NotificationType.WELCOME:
           jobName = EmailJobs.WELCOME;
           emailData = {
-            to: dto.data?.email,
+            to: dto.data?.to,
           };
           break;
 

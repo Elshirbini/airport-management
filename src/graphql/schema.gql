@@ -88,6 +88,21 @@ enum UserRole {
   PASSENGER
 }
 
+type Passenger {
+  id: ID!
+  userId: ID!
+  name: String!
+  passportNumber: String!
+  nationality: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type PassengerResponse {
+  passengers: [Passenger!]!
+  meta: PaginationMeta!
+}
+
 type Flight {
   id: ID!
   flightNumber: String!
@@ -156,6 +171,8 @@ type Query {
 
   """Return the currently authenticated user profile."""
   profile: UserProfile!
+  passengers(query: PassengerQueryInput = {}): PassengerResponse!
+  passenger(id: ID!): Passenger!
   staffs(input: StaffQueryInput = {}): StaffResponse!
   staff(id: ID!): Staff!
   airportAdmins(input: AirportAdminQueryInput = {}): AirportAdminResponse!
@@ -171,6 +188,11 @@ input QueryInput {
 }
 
 input AirportQueryInput {
+  page: Int
+  limit: Int
+}
+
+input PassengerQueryInput {
   page: Int
   limit: Int
 }
@@ -211,6 +233,9 @@ type Mutation {
 
   """Verify email address using the OTP sent during registration."""
   verifyEmail(email: String!, otp: String!): Boolean!
+  updatePassenger(id: ID!, input: UpdatePassengerInput!): Passenger!
+  updateMyPassengerProfile(input: UpdateMyPassengerProfileInput!): Passenger!
+  deletePassenger(id: ID!): Boolean!
   createStaff(input: CreateStaffInput!): Staff!
   updateStaff(id: ID!, input: UpdateStaffInput!): Staff!
   deleteStaff(id: ID!): Boolean!
@@ -239,11 +264,26 @@ input UpdateAirportInput {
 input RegisterInput {
   email: String!
   password: String!
+  name: String!
+  passportNumber: String!
+  nationality: String!
 }
 
 input LoginInput {
   email: String!
   password: String!
+}
+
+input UpdatePassengerInput {
+  name: String
+  passportNumber: String
+  nationality: String
+}
+
+input UpdateMyPassengerProfileInput {
+  name: String
+  passportNumber: String
+  nationality: String
 }
 
 input CreateStaffInput {

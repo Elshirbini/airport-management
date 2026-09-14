@@ -8,11 +8,14 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { FastifyReply } from 'fastify';
+import { DataSource } from 'typeorm';
 import { Mapper } from '@automapper/core';
 import { InjectMapper } from '@automapper/nestjs';
 
 import { User, UserRole } from 'src/users/entities/user.entity';
 import { UsersRepository } from 'src/users/users.repository';
+import { Passenger as DBPassenger } from 'src/passengers/entities/passenger.entity';
+import { PassengerRepository } from 'src/passengers/passenger.repository';
 import { RefreshTokenRepository } from './refresh-token.repository';
 import { TokenService } from './token.service';
 import { NotificationService } from 'src/notification/notification.service';
@@ -35,10 +38,12 @@ export class AuthService {
 
   constructor(
     private readonly userRepo: UsersRepository,
+    private readonly passengerRepo: PassengerRepository,
     private readonly refreshTokenRepo: RefreshTokenRepository,
     private readonly tokenService: TokenService,
     private readonly notificationService: NotificationService,
     private readonly redisService: RedisService,
+    private readonly dataSource: DataSource,
     @InjectMapper() private readonly mapper: Mapper,
   ) {}
 
@@ -88,14 +93,52 @@ export class AuthService {
       throw new ConflictException('An account with this email already exists');
     }
 
+    const existingPassenger =
+      await this.passengerRepo.findPassengerByPassportNumber(
+        input.passportNumber,
+      );
+
+    if (existingPassenger) {
+      throw new ConflictException(
+        'A passenger with this passport number already exists',
+      );
+    }
+
     const passwordHash = await bcrypt.hash(input.password, 12);
 
-    const user = await this.userRepo.create({
-      email: input.email.toLowerCase(),
-      password: passwordHash,
-      role: UserRole.PASSENGER,
-      emailVerified: false,
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    let user: User;
+
+    try {
+      const newUser = queryRunner.manager.create(User, {
+        email: input.email.toLowerCase(),
+        password: passwordHash,
+        role: UserRole.PASSENGER,
+        emailVerified: false,
+      });
+
+      const savedUser = await queryRunner.manager.save(User, newUser);
+
+      const passenger = queryRunner.manager.create(DBPassenger, {
+        userId: savedUser.id,
+        name: input.name,
+        passportNumber: input.passportNumber,
+        nationality: input.nationality,
+      });
+
+      await queryRunner.manager.save(DBPassenger, passenger);
+
+      await queryRunner.commitTransaction();
+      user = savedUser;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
 
     const otp = generateOtp(6);
 
