@@ -29,13 +29,7 @@ export class EmailChannel {
             to: dto.data?.email,
           };
           break;
-        case NotificationType.RESET_PASSWORD:
-          jobName = EmailJobs.RESET_PASSWORD;
-          emailData = {
-            to: dto.data?.email,
-            token: dto.data?.token, // If you have a token for resetting password
-          };
-          break;
+
         default:
           this.logger.warn(
             `Unsupported notification type for email channel: ${dto.type}`,

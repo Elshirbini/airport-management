@@ -91,13 +91,60 @@ enum UserRole {
   PASSENGER
 }
 
+type Staff {
+  id: ID!
+  userId: ID!
+  airportId: ID!
+  role: StaffRole!
+  assignedFlightId: ID
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum StaffRole {
+  PILOT
+  CREW
+  GROUND_STAFF
+  SECURITY
+}
+
+type StaffMeta {
+  totalCount: Float!
+}
+
+type StaffResponse {
+  staffs: [Staff!]!
+  meta: StaffMeta!
+}
+
+type AirportAdmin {
+  id: ID!
+  userId: ID!
+  airportId: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type AirportAdminMeta {
+  totalCount: Float!
+}
+
+type AirportAdminResponse {
+  airportAdmins: [AirportAdmin!]!
+  meta: AirportAdminMeta!
+}
+
 type Query {
   getNotifications(input: QueryInput!): NotificationResponse!
   airports(input: AirportQueryInput = {}): AirportResponse!
   airport(id: ID!): Airport!
 
   """Return the currently authenticated user profile."""
-  me: UserProfile!
+  profile: UserProfile!
+  staffs(input: StaffQueryInput = {}): StaffResponse!
+  staff(id: ID!): Staff!
+  airportAdmins(input: AirportAdminQueryInput = {}): AirportAdminResponse!
+  airportAdmin(id: ID!): AirportAdmin!
 }
 
 input QueryInput {
@@ -107,6 +154,14 @@ input QueryInput {
 
 input AirportQueryInput {
   limit: Float!
+}
+
+input StaffQueryInput {
+  limit: Float
+}
+
+input AirportAdminQueryInput {
+  limit: Float
 }
 
 type Mutation {
@@ -126,6 +181,12 @@ type Mutation {
 
   """Verify email address using the OTP sent during registration."""
   verifyEmail(email: String!, otp: String!): Boolean!
+  createStaff(input: CreateStaffInput!): Staff!
+  updateStaff(id: ID!, input: UpdateStaffInput!): Staff!
+  deleteStaff(id: ID!): Boolean!
+  assignStaffToFlight(staffId: ID!, flightId: ID!): Staff!
+  createAirportAdmin(input: CreateAirportAdminInput!): AirportAdmin!
+  deleteAirportAdmin(id: ID!): Boolean!
 }
 
 input CreateAirportInput {
@@ -150,6 +211,23 @@ input RegisterInput {
 input LoginInput {
   email: String!
   password: String!
+}
+
+input CreateStaffInput {
+  email: String!
+  password: String!
+  airportId: ID
+  role: StaffRole!
+}
+
+input UpdateStaffInput {
+  role: StaffRole
+}
+
+input CreateAirportAdminInput {
+  email: String!
+  password: String!
+  airportId: ID
 }
 
 type Subscription {

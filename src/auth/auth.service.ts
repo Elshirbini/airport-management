@@ -26,9 +26,8 @@ import {
   NotificationChannel,
   NotificationType,
 } from 'src/notification/enums/notification.enums';
+import { generateOtp } from 'src/utils/generate-otp.util';
 
-const OTP_LENGTH = 6;
-const OTP_TTL_SECONDS = 10 * 60;
 const REFRESH_TOKEN_TTL_DAYS = 7;
 
 @Injectable()
@@ -43,6 +42,45 @@ export class AuthService {
     private readonly redisService: RedisService,
     @InjectMapper() private readonly mapper: Mapper,
   ) {}
+
+  async login(input: LoginInput, reply: FastifyReply): Promise<UserProfile> {
+    const user = await this.userRepo.findByEmail(input.email);
+
+    if (!user) throw new UnauthorizedException('Invalid email or password');
+
+    const passwordMatch = await bcrypt.compare(input.password, user.password);
+
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Wrong password');
+    }
+
+    if (!user.emailVerified) {
+      throw new UnauthorizedException(
+        'Please verify your email before logging in',
+      );
+    }
+
+    const jwtPayload = { id: user.id, role: user.role };
+    const [accessToken, refreshToken] = await Promise.all([
+      this.tokenService.generateAccessToken(jwtPayload),
+      this.tokenService.generateRefreshToken(jwtPayload),
+    ]);
+
+    const tokenHash = await bcrypt.hash(refreshToken, 10);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_TTL_DAYS);
+
+    await this.refreshTokenRepo.save({
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+      isRevoked: false,
+    });
+
+    this.tokenService.setAuthCookies(reply, accessToken, refreshToken);
+
+    return this.mapper.map(user, User, UserProfile);
+  }
 
   async register(input: RegisterInput): Promise<UserProfile> {
     const existing = await this.userRepo.findByEmail(input.email);
@@ -60,16 +98,12 @@ export class AuthService {
       emailVerified: false,
     });
 
-    // Inline OTP generation
-    const otp = crypto
-      .randomInt(0, 10 ** OTP_LENGTH)
-      .toString()
-      .padStart(OTP_LENGTH, '0');
+    const otp = generateOtp(6);
 
     const otpHash = await bcrypt.hash(otp, 10);
     const key = `auth:email-otp:${user.email}`;
 
-    await this.redisService.set(key, otpHash, OTP_TTL_SECONDS);
+    await this.redisService.set(key, otpHash, 10 * 60);
 
     try {
       await this.notificationService.send({
@@ -117,53 +151,6 @@ export class AuthService {
     return true;
   }
 
-  async login(input: LoginInput, reply: FastifyReply): Promise<UserProfile> {
-    const user = await this.userRepo.findByEmail(input.email);
-
-    if (!user) {
-      // Constant-time-safe: still run bcrypt comparison to prevent timing attacks
-      await bcrypt.compare(
-        input.password,
-        '$2b$12$invalidhashpadding000000000000000000000000000000000000',
-      );
-      throw new UnauthorizedException('Invalid email or password');
-    }
-
-    const passwordMatch = await bcrypt.compare(input.password, user.password);
-
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
-
-    if (!user.emailVerified) {
-      throw new UnauthorizedException(
-        'Please verify your email before logging in',
-      );
-    }
-
-    // Inline issue token pair
-    const jwtPayload = { id: user.id, role: user.role };
-    const [accessToken, refreshToken] = await Promise.all([
-      this.tokenService.generateAccessToken(jwtPayload),
-      this.tokenService.generateRefreshToken(jwtPayload),
-    ]);
-
-    const tokenHash = await bcrypt.hash(refreshToken, 10);
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_TTL_DAYS);
-
-    await this.refreshTokenRepo.save({
-      userId: user.id,
-      tokenHash,
-      expiresAt,
-      isRevoked: false,
-    });
-
-    this.tokenService.setAuthCookies(reply, accessToken, refreshToken);
-
-    return this.mapper.map(user, User, UserProfile);
-  }
-
   async refreshToken(
     incomingToken: string,
     reply: FastifyReply,
@@ -207,7 +194,6 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    // Inline issue token pair
     const jwtPayload = { id: user.id, role: user.role };
     const [accessToken, refreshToken] = await Promise.all([
       this.tokenService.generateAccessToken(jwtPayload),
@@ -230,7 +216,7 @@ export class AuthService {
     return this.mapper.map(user, User, UserProfile);
   }
 
-  async me(userId: string): Promise<UserProfile> {
+  async profile(userId: string): Promise<UserProfile> {
     const user = await this.userRepo.findById(userId);
 
     if (!user) {

@@ -56,7 +56,7 @@ export class AuthResolver {
   @Query(() => UserProfile, {
     description: 'Return the currently authenticated user profile.',
   })
-  me(@CurrentUser() userId: string): Promise<UserProfile> {
-    return this.authService.me(userId);
+  profile(@CurrentUser() userId: string): Promise<UserProfile> {
+    return this.authService.profile(userId);
   }
 }

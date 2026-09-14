@@ -27,6 +27,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AirportModule } from './airports/airport.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { StaffModule } from './staff/staff.module';
+import { AirportAdminsModule } from './airport-admins/airport-admins.module';
 
 @Module({
   imports: [
@@ -183,6 +185,8 @@ import { UsersModule } from './users/users.module';
       }),
     }),
     AuthModule,
+    StaffModule,
+    AirportAdminsModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: GqlThrottlerGuard },
