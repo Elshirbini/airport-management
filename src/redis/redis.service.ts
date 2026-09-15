@@ -21,15 +21,8 @@ export class RedisService implements OnModuleDestroy {
     });
 
     this.redis.on('error', (err) => {
-      console.log('🔥 REDIS SERVICE ERROR', {
+      console.log('REDIS SERVICE ERROR', {
         error: err.message,
-        host: this.redis.options.host,
-        port: this.redis.options.port,
-      });
-    });
-
-    this.redis.on('connect', () => {
-      console.log('🔥 REDIS SERVICE CONNECT', {
         host: this.redis.options.host,
         port: this.redis.options.port,
       });
