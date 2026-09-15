@@ -10,5 +10,6 @@
     "test",
     "dist",
     "**/*spec.ts",
+    "test-*-sub.ts"
   ]
 }

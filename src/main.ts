@@ -18,11 +18,6 @@ import { winstonLogger } from './common/winston-logger';
 import * as crypto from 'crypto';
 import blockedAt from 'blocked-at';
 import { GraphQLValidationPipe } from './common/pipes/graphql-validation.pipe';
-import { GraphQLSchemaHost } from '@nestjs/graphql';
-import { createHandler } from 'graphql-sse/lib/use/fastify';
-import { JwtService } from '@nestjs/jwt';
-import { jwtPayload } from './common/interfaces/jwt-payload.interface';
-import { UnauthorizedException } from '@nestjs/common';
 
 type BlockedAtFn = (
   onBlock: (time: number, stack: unknown) => void,
@@ -59,8 +54,6 @@ async function bootstrap() {
   await app.register(fastifyCompress, {
     global: true,
   });
-
-  const fastify = app.getHttpAdapter().getInstance();
 
   app
     .getHttpAdapter()
@@ -154,53 +147,6 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   await app.init();
-
-  const { schema } = app.get(GraphQLSchemaHost);
-
-  const jwtService = app.get(JwtService);
-
-  const sseHandler = createHandler<{ user: jwtPayload }>({
-    schema,
-
-    context: async (req) => {
-      const cookies = req.headers.get('cookie');
-
-      if (!cookies) {
-        throw new UnauthorizedException('Unauthorized');
-      }
-
-      const accessToken = cookies
-        .split(';')
-        .map((cookie) => cookie.trim())
-        .find((cookie) => cookie.startsWith('accessToken='))
-        ?.split('=')[1];
-
-      if (!accessToken) {
-        throw new UnauthorizedException('Unauthorized');
-      }
-
-      try {
-        const payload = await jwtService.verifyAsync<jwtPayload>(accessToken, {
-          secret: process.env.ACCESS_TOKEN_SECRET,
-        });
-
-        return {
-          user: payload,
-        };
-      } catch {
-        throw new UnauthorizedException('Token is invalid or expired');
-      }
-    },
-  });
-
-  fastify.all('/graphql/sse', async (request, reply) => {
-    try {
-      await sseHandler(request, reply);
-    } catch (error) {
-      winstonLogger.error(error);
-      throw error;
-    }
-  });
 
   await app.listen(3000, '0.0.0.0');
 }

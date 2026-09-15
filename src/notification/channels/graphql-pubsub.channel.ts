@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { pubSub } from '../pubsub';
-// import { Notification } from '../schemas/notification.schema';
+import { pubSub } from '../../common/pubsub';
 
 @Injectable()
 export class GraphQLPubSubChannel {

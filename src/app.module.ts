@@ -75,6 +75,8 @@ import { BookingsModule } from './bookings/bookings.module';
                   },
                 );
 
+                (ctx.extra as any).user = payload;
+
                 return {
                   user: payload,
                 };
@@ -117,10 +119,15 @@ import { BookingsModule } from './bookings/bookings.module';
             },
           };
         },
-        context: (request: FastifyRequest, reply: FastifyReply) => ({
-          request,
-          reply,
-        }),
+        context: (request: FastifyRequest, reply: FastifyReply) => {
+          // graphql-ws subscription: first arg has connectionParams
+          if ((request as any).connectionParams !== undefined) {
+            const wsCtx = request as any;
+            return { user: wsCtx.extra?.user };
+          }
+          // HTTP query/mutation (Fastify passes request + reply as positional args)
+          return { request, reply };
+        },
         plugins: [
           GraphQLLoggingPlugin,
           ApolloServerPluginLandingPageLocalDefault(),

@@ -18,7 +18,15 @@ import { FlightResponse } from './graphql/types/flight-response.type';
 import { CreateFlightInput } from './graphql/inputs/create-flight.input';
 import { UpdateFlightInput } from './graphql/inputs/update-flight.input';
 import { FlightQueryInput } from './graphql/inputs/flight-query.input';
-import { pubSub } from '../notification/pubsub';
+import { pubSub } from '../common/pubsub';
+
+const rehydrateFlightDates = (flight: Flight): Flight => ({
+  ...flight,
+  departureTime: new Date(flight.departureTime),
+  arrivalTime: new Date(flight.arrivalTime),
+  createdAt: new Date(flight.createdAt),
+  updatedAt: new Date(flight.updatedAt),
+});
 
 @Resolver(() => Flight)
 export class FlightResolver {
@@ -77,9 +85,9 @@ export class FlightResolver {
   @UseGuards(SubscriptionAuthGuard)
   @Subscription(() => Flight, {
     name: FLIGHT_STATUS_UPDATED,
-    filter(payload, variables) {
-      return payload.flightStatusUpdated.id === variables.flightId;
-    },
+    filter: (payload, variables) =>
+      payload[FLIGHT_STATUS_UPDATED].id === variables.flightId,
+    resolve: (payload) => rehydrateFlightDates(payload[FLIGHT_STATUS_UPDATED]),
   })
   flightStatusUpdated(@Args('flightId', { type: () => ID }) flightId: string) {
     return pubSub.asyncIterableIterator(FLIGHT_STATUS_UPDATED);

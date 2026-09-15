@@ -13,7 +13,7 @@ import {
 import { GraphQLContext } from 'src/graphql/graphql-context';
 import { NotificationResponse } from './graphql/types/notification-response.type';
 import { Notification } from './graphql/types/notification.type';
-import { pubSub } from './pubsub';
+import { pubSub } from '../common/pubsub';
 import { SubscriptionAuthGuard } from 'src/common/guards/subscription-auth.guard';
 
 @Resolver()

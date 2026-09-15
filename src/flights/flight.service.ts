@@ -19,7 +19,7 @@ import { UserRole } from '../users/entities/user.entity';
 import { CreateFlightInput } from './graphql/inputs/create-flight.input';
 import { UpdateFlightInput } from './graphql/inputs/update-flight.input';
 import { FlightQueryInput } from './graphql/inputs/flight-query.input';
-import { pubSub } from '../notification/pubsub';
+import { pubSub } from '../common/pubsub';
 
 export const FLIGHT_STATUS_UPDATED = 'FLIGHT_STATUS_UPDATED';
 
@@ -216,7 +216,7 @@ export class FlightService {
         GraphQLFlight,
       );
       await pubSub.publish(FLIGHT_STATUS_UPDATED, {
-        flightStatusUpdated: mapped,
+        [FLIGHT_STATUS_UPDATED]: mapped,
       });
     }
 
