@@ -10,6 +10,8 @@ import { PassengersModule } from '../passengers/passengers.module';
 import { FlightsModule } from '../flights/flights.module';
 import { UsersModule } from '../users/users.module';
 import { NotificationModule } from '../notification/notification.module';
+import { PassengerLoader } from './dataloaders/passenger.loader';
+import { FlightLoader } from './dataloaders/flight.loader';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { NotificationModule } from '../notification/notification.module';
     BookingService,
     BookingResolver,
     BookingMapper,
+    PassengerLoader,
+    FlightLoader,
   ],
   exports: [BookingRepository, BookingService],
 })

@@ -20,10 +20,17 @@ import { BookingResponse } from './graphql/types/booking-response.type';
 import { CreateBookingInput } from './graphql/inputs/create-booking.input';
 import { BookingQueryInput } from './graphql/inputs/booking-query.input';
 import { Flight } from '../flights/graphql/types/flight.type';
+import { Passenger } from '../passengers/graphql/types/passenger.type';
+import { PassengerLoader } from './dataloaders/passenger.loader';
+import { FlightLoader } from './dataloaders/flight.loader';
 
 @Resolver(() => Booking)
 export class BookingResolver {
-  constructor(private readonly bookingService: BookingService) {}
+  constructor(
+    private readonly bookingService: BookingService,
+    private readonly passengerLoader: PassengerLoader,
+    private readonly flightLoader: FlightLoader,
+  ) {}
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles('PASSENGER')
@@ -68,6 +75,11 @@ export class BookingResolver {
 
   @ResolveField(() => Flight, { nullable: true })
   flight(@Parent() booking: Booking) {
-    return this.bookingService.resolveFlight(booking.flightId);
+    return this.flightLoader.load(booking.flightId);
+  }
+
+  @ResolveField(() => Passenger, { nullable: true })
+  passenger(@Parent() booking: Booking) {
+    return this.passengerLoader.load(booking.passengerId);
   }
 }

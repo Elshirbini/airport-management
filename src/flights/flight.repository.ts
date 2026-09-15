@@ -1,12 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  FindOptionsWhere,
-  Repository,
-  Between,
-  LessThanOrEqual,
-  MoreThanOrEqual,
-} from 'typeorm';
+import { Repository, In } from 'typeorm';
 
 import { resolvePagination } from '../common/utils/pagination.util';
 import { Flight } from './entities/flight.entity';
@@ -26,6 +20,11 @@ export class FlightRepository {
 
   async findById(id: string): Promise<Flight | null> {
     return this.repository.findOne({ where: { id } });
+  }
+
+  async findByIds(ids: string[]): Promise<Flight[]> {
+    if (!ids || ids.length === 0) return [];
+    return this.repository.find({ where: { id: In(ids) } });
   }
 
   async findByFlightNumber(flightNumber: string): Promise<Flight | null> {

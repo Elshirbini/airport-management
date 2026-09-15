@@ -171,6 +171,7 @@ type Booking {
   createdAt: DateTime!
   updatedAt: DateTime!
   flight: Flight
+  passenger: Passenger
 }
 
 """Status of a booking"""

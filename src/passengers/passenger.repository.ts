@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { resolvePagination } from '../common/utils/pagination.util';
 import { Passenger } from './entities/passenger.entity';
@@ -43,6 +43,13 @@ export class PassengerRepository {
   async findPassengerById(id: string): Promise<Passenger | null> {
     return this.passengerRepository.findOne({
       where: { id },
+    });
+  }
+
+  async findByIds(ids: string[]): Promise<Passenger[]> {
+    if (!ids || ids.length === 0) return [];
+    return this.passengerRepository.find({
+      where: { id: In(ids) },
     });
   }
 

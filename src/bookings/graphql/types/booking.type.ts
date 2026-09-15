@@ -2,6 +2,7 @@ import { AutoMap } from '@automapper/classes';
 import { Field, ID, Int, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { BookingStatus } from '../../entities/booking.entity';
 import { Flight } from '../../../flights/graphql/types/flight.type';
+import { Passenger } from '../../../passengers/graphql/types/passenger.type';
 
 registerEnumType(BookingStatus, {
   name: 'BookingStatus',
@@ -40,4 +41,7 @@ export class Booking {
 
   @Field(() => Flight, { nullable: true })
   flight?: Flight;
+
+  @Field(() => Passenger, { nullable: true })
+  passenger?: Passenger;
 }
