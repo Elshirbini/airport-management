@@ -35,12 +35,6 @@ export class PassengerService {
     const currentUser = await this.usersRepository.findById(currentUserId);
     if (!currentUser) throw new UnauthorizedException();
 
-    if (currentUser.role !== UserRole.SUPER_ADMIN) {
-      throw new ForbiddenException(
-        'You do not have permission to list passengers.',
-      );
-    }
-
     const { passengers, page, totalCount } =
       await this.passengerRepository.getPassengers(query);
 
@@ -75,8 +69,6 @@ export class PassengerService {
           'You can only view your own passenger profile.',
         );
       }
-    } else if (currentUser.role !== UserRole.SUPER_ADMIN) {
-      throw new ForbiddenException();
     }
 
     return this.mapper.mapAsync(passenger, DBPassenger, GraphQLPassenger);
@@ -94,10 +86,6 @@ export class PassengerService {
     const currentUser = await this.usersRepository.findById(currentUserId);
     if (!currentUser) throw new UnauthorizedException();
 
-    if (currentUser.role !== UserRole.SUPER_ADMIN) {
-      throw new ForbiddenException();
-    }
-
     await this.applyPassengerUpdates(passenger, input);
 
     const updated = await this.passengerRepository.savePassenger(passenger);
@@ -110,12 +98,6 @@ export class PassengerService {
   ): Promise<GraphQLPassenger> {
     const currentUser = await this.usersRepository.findById(currentUserId);
     if (!currentUser) throw new UnauthorizedException();
-
-    if (currentUser.role !== UserRole.PASSENGER) {
-      throw new ForbiddenException(
-        'Only passengers can update their own profile.',
-      );
-    }
 
     const passenger =
       await this.passengerRepository.findPassengerByUserId(currentUserId);
@@ -139,10 +121,6 @@ export class PassengerService {
 
     const currentUser = await this.usersRepository.findById(currentUserId);
     if (!currentUser) throw new UnauthorizedException();
-
-    if (currentUser.role !== UserRole.SUPER_ADMIN) {
-      throw new ForbiddenException();
-    }
 
     await this.dataSource.manager.transaction(async (manager) => {
       await manager.delete(DBPassenger, { id: passengerId });

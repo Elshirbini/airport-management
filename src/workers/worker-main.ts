@@ -8,7 +8,7 @@ async function bootstrap() {
     logger: winstonLogger,
   });
 
-  console.log('🚀 Worker running');
+  winstonLogger.log('🚀 Worker running');
 }
 
 bootstrap();

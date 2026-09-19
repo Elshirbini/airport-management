@@ -97,13 +97,6 @@ export class FlightService {
     const currentUser = await this.usersRepository.findById(currentUserId);
     if (!currentUser) throw new UnauthorizedException();
 
-    if (
-      currentUser.role !== UserRole.SUPER_ADMIN &&
-      currentUser.role !== UserRole.AIRPORT_ADMIN
-    ) {
-      throw new ForbiddenException();
-    }
-
     if (currentUser.role === UserRole.AIRPORT_ADMIN) {
       const adminAirportId = await this.getAdminAirportId(currentUserId);
       if (
